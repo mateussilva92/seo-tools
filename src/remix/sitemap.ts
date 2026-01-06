@@ -35,12 +35,17 @@ const convertRemixPathToUrl = (routes: RouteManifest<Route | undefined>, route: 
 }
 
 const createExtendedRoutes = (routes: RouteManifest<InternalServerRoute | undefined>) => {
-	return Object.values(routes).map((route) => {
-		return {
-			...route,
-			url: convertRemixPathToUrl(routes, route),
-		}
-	})
+	return Object.values(routes)
+		.filter((route) => {
+			// Filter out layouts from the routes
+			return route?.path !== undefined || route?.index
+		})
+		.map((route) => {
+			return {
+				...route,
+				url: convertRemixPathToUrl(routes, route),
+			}
+		})
 }
 const generateRemixSitemapRoutes = async ({
 	domain,

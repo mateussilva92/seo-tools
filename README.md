@@ -357,6 +357,8 @@ export const handle: SitemapHandle<SitemapData> = {
 }
 ```
 
+This applies to all routes, including `root.tsx`. The `root.tsx` sitemap function acts as a fallback and will run for any route that does not define its own sitemap handle.
+
 ### Handling sitemap index + dynamic sitemaps + robots.txt
 
 If you want to generate different sitemaps based on the language you can use the following approach:

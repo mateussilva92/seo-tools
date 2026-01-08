@@ -47,6 +47,11 @@ const createExtendedRoutes = (routes: RouteManifest<InternalServerRoute | undefi
 			}
 		})
 }
+
+const hasSitemapHandle = (handle: unknown): handle is { sitemap: SitemapFunction<unknown> } => {
+	return Boolean(handle && typeof handle === "object" && "sitemap" in handle && typeof handle.sitemap === "function")
+}
+
 const generateRemixSitemapRoutes = async ({
 	domain,
 	sitemapData,
@@ -59,21 +64,32 @@ const generateRemixSitemapRoutes = async ({
 	// Add the url to each route
 	const extendedRoutes = createExtendedRoutes(routes)
 
+	const rootRoute = extendedRoutes.find(({ id }) => id === "root")
+	const rootHandle = rootRoute?.module?.handle
+
+	const hasRootHandle = hasSitemapHandle(rootHandle)
+
 	const transformedRoutes = await Promise.all(
 		extendedRoutes.map(async (route) => {
-			const url = route.url
 			// We don't want to include the root route in the sitemap
 			if (route.id === "root") return
-			// If the route has a module, get the handle
+
+			const url = route.url
 			const handle = route.module?.handle
-			// If the route has a sitemap function, call it and return the sitemap entries
-			if (handle && typeof handle === "object" && "sitemap" in handle && typeof handle.sitemap === "function") {
-				// Type the function just in case
-				const sitemap = handle.sitemap as SitemapFunction<unknown>
-				const sitemapEntries: SitemapFunctionReturnData = await sitemap(domain, url, sitemapData)
+
+			// Run the route sitemap function if it exists
+			if (hasSitemapHandle(handle)) {
+				const sitemapEntries = await handle.sitemap(domain, url, sitemapData)
 				return { url, sitemapEntries, id: route.id }
 			}
-			// Otherwise, just return the route as a single entry
+
+			// As a fallback run the root route sitemap function
+			if (hasRootHandle) {
+				const sitemapEntries = await rootHandle.sitemap(domain, url, sitemapData)
+				return { url, sitemapEntries, id: route.id }
+			}
+
+			// If no sitemap function was found, just return the route as a single entry
 			return { url, sitemapEntries: null, id: route.id }
 		})
 	)

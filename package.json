@@ -19,7 +19,8 @@
 		"check": "biome check .",
 		"check:fix": "biome check --fix .",
 		"typecheck": "tsc",
-		"validate": "npm run check && npm run tsc && npm run test"
+		"validate": "npm run check && npm run tsc && npm run test",
+		"prepare": "npm run build"
 	},
 	"author": "@forge42dev",
 	"license": "MIT",
